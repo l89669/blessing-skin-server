@@ -139,14 +139,22 @@
 
 @section('script')
 <script>
-    @if ($texture->type == "cape")
-        MSP.changeCape('{{ url('textures/'.$texture->hash) }}');
-    @else
-        MSP.changeSkin('{{ url('textures/'.$texture->hash) }}');
-    @endif
+    // Dump texture information to JavaScript code
+    var texture = {!! $texture->toJson() !!};
 
-    $(document).ready(TexturePreview.init3dPreview);
+    $(document).ready(function () {
+        TexturePreview.init3dPreview();
+
+        var textureUrl = url('textures/' + texture.hash);
+
+        if (texture.type == 'cape') {
+            TexturePreview.changeCape(textureUrl);
+        } else {
+            TexturePreview.changeModel(texture.type);
+            TexturePreview.changeSkin(textureUrl);
+        }
+    });
     // Auto resize canvas to fit responsive design
-    $(window).resize(TexturePreview.init3dPreview);
+    $(window).resize(TexturePreview.resize3dPreview);
 </script>
 @endsection

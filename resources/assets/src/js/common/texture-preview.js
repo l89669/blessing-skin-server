@@ -1,4 +1,4 @@
-/* global MSP */
+/* global MSP, skinview3d */
 
 class TexturePreview {
     constructor(type, tid, preference) {
@@ -53,20 +53,71 @@ class TexturePreview {
 
 TexturePreview.previewType = '3D';
 
-TexturePreview.init3dPreview = () => {
-    if (TexturePreview.previewType == '2D') return;
+TexturePreview.skinViewer = null;
+
+TexturePreview.defaultSkinUrl = url('resources/assets/dist/images/steve.png');
+
+TexturePreview.init3dPreview = (slim = false) => {
+    if (TexturePreview.previewType == '2D')
+        return;
 
     $('#preview-2d').hide();
 
-    let canvas = null;
+    if (TexturePreview.skinViewer === null) {
+        console.log('[3D Preview] Trying to init preview');
 
-    if ($(window).width() < 800) {
-        canvas = MSP.get3dSkinCanvas($('#skinpreview').width(), $('#skinpreview').width());
-        $('#skinpreview').append($(canvas).prop('id', 'canvas3d'));
-    } else {
-        canvas = MSP.get3dSkinCanvas(350, 350);
-        $('#skinpreview').append($(canvas).prop('id', 'canvas3d'));
+        let skinViewer = new skinview3d.SkinViewer({
+            domElement: document.getElementById('skinpreview'),
+            slim: slim,
+            width: $('#skinpreview').width(),
+            height: 350,
+            skinUrl: TexturePreview.defaultSkinUrl,
+            animation: skinview3d.WalkAnimation
+        });
+
+        TexturePreview.skinViewer = skinViewer;
+
+        console.log('[3D Preview] Preview initialized');
     }
+};
+
+TexturePreview.resize3dPreview = () => {
+    TexturePreview.init3dPreview();
+
+    let size = {
+        width: $('#skinpreview').width(),
+        height: 350
+    };
+
+    TexturePreview.skinViewer.width = size.width;
+	TexturePreview.skinViewer.height = size.height;
+
+    console.log('[3D Preview] Canvas resized', size);
+};
+
+TexturePreview.changeSkin = url => {
+    TexturePreview.skinViewer.skinUrl = url;
+};
+
+TexturePreview.changeCape = url => {
+    TexturePreview.skinViewer.capeUrl = url;
+};
+
+TexturePreview.changeModel = (model = 'steve') => {
+    let currentModel = TexturePreview.skinViewer.slim ? 'alex' : 'steve';
+
+    if (model !== currentModel) {
+        // init 3d preview with new model
+        TexturePreview.destorySkinViewer();
+        TexturePreview.init3dPreview(model === 'alex');
+
+        console.log('[3D Preview] Preview re-rendered with model', model);
+    }
+};
+
+TexturePreview.destorySkinViewer = () => {
+    TexturePreview.skinViewer.dispose();
+    TexturePreview.skinViewer = null;
 };
 
 TexturePreview.show3dPreview = () => {

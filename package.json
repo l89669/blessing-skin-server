@@ -45,6 +45,7 @@
     "icheck": "^1.0.2",
     "jqPaginator": "^1.2.0",
     "jquery": "^3.2.1",
+    "skinview3d": "^1.0.1",
     "sweetalert2": "^6.6.5",
     "toastr": "^2.1.2"
   },

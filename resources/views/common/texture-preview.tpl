@@ -9,16 +9,36 @@
     </h3>
 </div><!-- /.box-header -->
 <div class="box-body">
+    <!-- Container for 3D skin preview -->
     <div id="skinpreview">
-        <!-- Container for 3D Preview -->
+        @if (isset($enable_2d_preview) && $enable_2d_preview)
+        <div id="preview-2d">
+            <p>{{ trans('user.player.textures.steve') }}<a href=""><img id="steve" class="skin2d" /></a>
+                <span class="skin2d">{{ trans('user.player.textures.empty') }}</span>
+            </p>
+
+            <p>{{ trans('user.player.textures.alex') }}<a href=""><img id="alex" class="skin2d" /></a>
+                <span class="skin2d">{{ trans('user.player.textures.empty') }}</span>
+            </p>
+
+            <p>{{ trans('user.player.textures.cape') }}<a href=""><img id="cape" class="skin2d" /></a>
+                <span class="skin2d">{{ trans('user.player.textures.empty') }}</span>
+            </p>
+        </div>
+        @endif
     </div>
 </div><!-- /.box-body -->
 
+<!-- Load dependencies for 3D skin preview -->
 <script type="text/javascript" src="{{ assets('js/three.min.js') }}"></script>
-<script type="text/javascript" src="{{ assets('js/three.msp.js') }}"></script>
+<script type="text/javascript" src="{{ assets('js/skinview3d.babel.js') }}"></script>
 
-<script>
+{{-- <script>
     var dskin = "data:image/png;base64,{{ App\Http\Controllers\TextureController::getDefaultSkin() }}";
-    MSP.changeSkin(dskin);
+    // MSP.changeSkin(dskin);
+
+    TexturePreview.init3dPreview;
+    MSP.skinUrl = dskin;
+
     console.log('[3D Preview] Default skin rendered.');
-</script>
+</script> --}}

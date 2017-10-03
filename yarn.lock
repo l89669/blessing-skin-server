@@ -3501,6 +3501,12 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "http://registry.npm.taobao.org/signal-exit/download/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
 
+skinview3d@^1.0.1:
+  version "1.0.1"
+  resolved "http://registry.npm.taobao.org/skinview3d/download/skinview3d-1.0.1.tgz#c3bbf3af9068d477403664e6578a4ccdac3b2288"
+  dependencies:
+    three "^0.87.1"
+
 slash@^1.0.0:
   version "1.0.0"
   resolved "http://registry.npm.taobao.org/slash/download/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
@@ -3725,6 +3731,10 @@ test-exclude@^4.1.1:
 text-table@~0.2.0:
   version "0.2.0"
   resolved "http://registry.npm.taobao.org/text-table/download/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
+
+three@^0.87.1:
+  version "0.87.1"
+  resolved "http://registry.npm.taobao.org/three/download/three-0.87.1.tgz#466a34edc4543459ced9b9d7d276b65216fe2ba8"
 
 throat@^3.0.0:
   version "3.2.0"

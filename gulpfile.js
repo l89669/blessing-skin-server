@@ -113,8 +113,11 @@ gulp.task('publish-vendor', ['compile-es6'], callback => {
     gulp.src('node_modules/admin-lte/dist/css/skins/*.min.css')
         .pipe(gulp.dest(`${distPath}/css/skins/`));
     // 3D skin preview
-    gulp.src(['skin-preview/**', 'Chart.min.js'].map(path => `${srcPath}/vendor/${path}`))
-        .pipe(gulp.dest(`${distPath}/js/`));
+    gulp.src(convertNpmRelativePath([
+        'three/build/three.min.js',
+        'skinview3d/build/skinview3d.babel.js',
+        'admin-lte/plugins/chartjs/Chart.min.js'
+    ])).pipe(gulp.dest(`${distPath}/js/`));
 
     callback();
 });
