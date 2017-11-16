@@ -1,0 +1,112 @@
+diff --git a/3.3.1/app/Http/Controllers/PlayerController.php b/custom/app/Http/Controllers/PlayerController.php
+index 992a9a3..e04850a
+--- a/3.3.1/app/Http/Controllers/PlayerController.php
++++ b/custom/app/Http/Controllers/PlayerController.php
+@@ -85,6 +85,7 @@ class PlayerController extends Controller
+ 
+     public function delete(Request $request)
+     {
++        return json(trans('user.player.rename.forbidden'), 6);
+         $player_name = $this->player->player_name;
+ 
+         Event::fire(new PlayerWillBeDeleted($this->player));
+@@ -107,6 +108,7 @@ class PlayerController extends Controller
+ 
+     public function rename(Request $request)
+     {
++        return json(trans('user.player.rename.forbidden'), 6);
+         $this->validate($request, [
+             'new_player_name' => 'required|'.(option('allow_chinese_playername') ? 'pname_chinese' : 'playername')
+         ]);
+diff --git a/3.3.1/app/Http/Controllers/UserController.php b/custom/app/Http/Controllers/UserController.php
+index 60ef33e..24a27af
+--- a/3.3.1/app/Http/Controllers/UserController.php
++++ b/custom/app/Http/Controllers/UserController.php
+@@ -154,6 +154,7 @@ class UserController extends Controller
+                 break;
+ 
+             case 'delete':
++                return json(trans('user.player.rename.forbidden'), 6);
+                 $this->validate($request, [
+                     'password' => 'required|min:6|max:16'
+                 ]);
+diff --git a/3.3.1/resources/lang/zh_CN/index.yml b/custom/resources/lang/zh_CN/index.yml
+index e395192..f4658a2
+--- a/3.3.1/resources/lang/zh_CN/index.yml
++++ b/custom/resources/lang/zh_CN/index.yml
+@@ -1,16 +1,16 @@
+ features:
+   multi-player:
+-    name: 多角色
+-    desc: 一个账户可绑定多个游戏角色
++    name: ''
++    desc: 成立超久，玩法超新，接待超萌，一切精彩等你来发现！
+ 
+   sharing:
+-    name: 分享
+-    desc: 浏览皮肤库，添加喜爱的皮肤并与好友分享
++    name: ''
++    desc: 和我们一起探索未知的世界，你准备好了吗？
+ 
+   free:
+-    name: 永久免费
+-    desc: 我们承诺永不收取任何费用
++    name: ''
++    desc: 开服两年，夏沁初心陪你一起成长，我们永远是你最可依赖的好伙伴！
+ 
+-introduction: :sitename 提供 Minecraft 角色皮肤的上传以及托管服务。配合 CustomSkinLoader 等换肤 MOD，您可以为您的游戏角色设置皮肤与披风，并让其他玩家在游戏中看到。
++introduction: 本站为 :sitename 服务器的官方网站，为玩家提供账户管理以及皮肤的上传托管服务。使用专用启动器或配合 CustomSkinLoader 等换肤 MOD，您可以为您的游戏角色设置皮肤与披风，并让其他玩家在游戏中看到。
+ 
+ start: 开始使用
+diff --git a/3.3.1/resources/lang/zh_CN/user.yml b/custom/resources/lang/zh_CN/user.yml
+index e7d6e03..d3049e2
+--- a/3.3.1/resources/lang/zh_CN/user.yml
++++ b/custom/resources/lang/zh_CN/user.yml
+@@ -94,6 +94,7 @@ player:
+     success: 角色 :name 已被删除
+ 
+   rename:
++    forbidden: 该操作已被禁止
+     repeated: 此角色名已被他人使用，换一个吧~
+     success: 角色 :old 已更名为 :new
+ 
+diff --git a/3.3.1/resources/views/auth/register.tpl b/custom/resources/views/auth/register.tpl
+old mode 100644
+new mode 100755
+index bb46cba..9b8b1d7
+--- a/3.3.1/resources/views/auth/register.tpl
++++ b/custom/resources/views/auth/register.tpl
+@@ -10,7 +10,8 @@
+     </div>
+ 
+     <div class="register-box-body">
+-        <p class="login-box-msg">{{ trans('auth.register.message', ['sitename' => option('site_name')]) }}</p>
++        <p class="login-box-msg"><strong>{{ trans('auth.register.message', ['sitename' => option('site_name')]) }}</strong></p>
++		<p class="login-box-msg" style="color:#FF0000">注册后请不要忘记创建角色哦~</p>
+ 
+         <form id="register-form">
+             <div class="form-group has-feedback">
+diff --git a/3.3.1/resources/views/index.tpl b/custom/resources/views/index.tpl
+old mode 100644
+new mode 100755
+index bb333bd..930f6ab
+--- a/3.3.1/resources/views/index.tpl
++++ b/custom/resources/views/index.tpl
+@@ -76,7 +76,7 @@
+     <div id="intro">
+         <div class="container">
+             <div class="row text-center">
+-                <h1>Features</h1>
++                <h1>特色介绍</h1>
+                 <br>
+                 <br>
+                 <div class="col-lg-4">
+@@ -106,7 +106,7 @@
+             </div>
+ 
+             <div class="col-lg-6">
+-                <a href="{{ url('auth/register') }}" id="btn-register" class="button">{{ trans('index.start') }}</a>
++                <a href="{{ url('auth/register') }}" id="btn-register" class="button" style="background: rgba(255, 255, 255, 0)">{{ trans('index.start') }}</a>
+             </div>
+         </div>
+     </div>
