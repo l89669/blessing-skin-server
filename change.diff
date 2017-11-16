@@ -1,39 +1,179 @@
-diff --git a/3.3.1/app/Http/Controllers/PlayerController.php b/custom/app/Http/Controllers/PlayerController.php
-index 992a9a3..e04850a
---- a/3.3.1/app/Http/Controllers/PlayerController.php
-+++ b/custom/app/Http/Controllers/PlayerController.php
-@@ -85,6 +85,7 @@ class PlayerController extends Controller
+diff --git a/3.3.2/app/Http/Controllers/AuthController.php b/www/app/Http/Controllers/AuthController.php
+index 4d6d0f7..937e05e
+--- a/3.3.2/app/Http/Controllers/AuthController.php
++++ b/www/app/Http/Controllers/AuthController.php
+@@ -43,10 +43,8 @@ class AuthController extends Controller
+         // it will return a null value.
+         $user = $users->get($identification, $auth_type);
+ 
+-        if (session('login_fails', 0) > 3) {
+-            if (strtolower($request->input('captcha')) != strtolower(session('phrase')))
+-                return json(trans('auth.validation.captcha'), 1);
+-        }
++        if (strtolower($request->input('captcha')) != strtolower(session('phrase')))
++            return json(trans('auth.validation.captcha'), 1);
+ 
+         if (!$user) {
+             return json(trans('auth.validation.user'), 2);
+@@ -141,34 +139,43 @@ class AuthController extends Controller
+                 return json(trans('auth.register.registered'), 5);
+             }
+ 
+-            event(new Events\UserRegistered($user));
+-
+-            $msg = trans('auth.register.success');
+-            $redirect = true;
+-
+-            if ($request->input('addPlayer') == 'add') {
+-                if (!Player::where('player_name', $request->nickname)->first()) {
+-                    if (!Validator::make(
+-                        ['name' => $request->nickname],
+-                        ['name' => option('allow_chinese_playername') ? 'pname_chinese' : 'playername']
+-                    )->fails()) {
+-                        $player = new Player;
+-                        $player->uid           = $user->uid;
+-                        $player->player_name   = $request->input('nickname');
+-                        $player->preference    = "default";
+-                        $player->last_modified = Utils::getTimeFormatted();
+-                        $player->save();
+-
+-                        event(new Events\PlayerWasAdded($player));
+-                    } else {
+-                        $msg = trans('auth.register.success-with-chinese-player-name');
+-                        $redirect = false;
+-                    }
++			$validate = AuthController::validate_playerName($request->nickname);
++			
++			if ($validate > 0) {
++				$user->delete();
++			    return json('注册失败：角色名不能以数字或下划线作为开头。', 5);
++			} else if ($validate < 0) {
++				$user->delete();
++				return json('注册失败：角色名过长。', 5);
++			}
++				
++				
++            if (!Player::where('player_name', $request->nickname)->first()) {
++                if (!Validator::make(
++                    ['name' => $request->nickname],
++                    ['name' => option('allow_chinese_playername') ? 'pname_chinese' : 'playername']
++                )->fails()) {
++                    $player = new Player;
++                    $player->uid           = $user->uid;
++                    $player->player_name   = $request->input('nickname');
++                    $player->preference    = "default";
++                    $player->last_modified = Utils::getTimeFormatted();
++                    $player->save();
++
++                    event(new Events\PlayerWasAdded($player));
+                 } else {
+-                    $msg = trans('auth.register.success-without-player');
+-                    $redirect = false;
++                    $user->delete();
++                    return json('注册失败：角色名不合法。', 5);
+                 }
++            } else {
++                $user->delete();
++                return json('注册失败：角色名已存在。', 5);
+             }
++			
++			event(new Events\UserRegistered($user));
++			
++			$msg = trans('auth.register.success');
++            $redirect = true;
+ 
+             return json([
+                 'errno'    => 0,
+@@ -183,6 +190,23 @@ class AuthController extends Controller
+             return json(trans('auth.register.max', ['regs' => option('regs_per_ip')]), 7);
+         }
+     }
++	
++	private static function validate_playerName($playerName)
++	{
++		$username = $playerName;
++		$firstchar = substr($username, 0, 1);
++		$len = mb_strlen($username,'UTF-8');
++		
++		if (preg_match('|[0-9_]+$|i',$firstchar)) {
++			return 1;
++		}
++		
++		if ($len > 15) {
++			return -1;
++		}
++		
++		return 0;
++	}
+ 
+     public function forgot()
+     {
+diff --git a/3.3.2/app/Http/Controllers/PlayerController.php b/www/app/Http/Controllers/PlayerController.php
+index 992a9a3..a402340 100755
+--- a/3.3.2/app/Http/Controllers/PlayerController.php
++++ b/www/app/Http/Controllers/PlayerController.php
+@@ -85,7 +85,8 @@ class PlayerController extends Controller
  
      public function delete(Request $request)
      {
+-        $player_name = $this->player->player_name;
 +        return json(trans('user.player.rename.forbidden'), 6);
-         $player_name = $this->player->player_name;
++		$player_name = $this->player->player_name;
  
          Event::fire(new PlayerWillBeDeleted($this->player));
-@@ -107,6 +108,7 @@ class PlayerController extends Controller
  
-     public function rename(Request $request)
-     {
-+        return json(trans('user.player.rename.forbidden'), 6);
-         $this->validate($request, [
-             'new_player_name' => 'required|'.(option('allow_chinese_playername') ? 'pname_chinese' : 'playername')
-         ]);
-diff --git a/3.3.1/app/Http/Controllers/UserController.php b/custom/app/Http/Controllers/UserController.php
-index 60ef33e..24a27af
---- a/3.3.1/app/Http/Controllers/UserController.php
-+++ b/custom/app/Http/Controllers/UserController.php
+diff --git a/3.3.2/app/Http/Controllers/UserController.php b/www/app/Http/Controllers/UserController.php
+index 60ef33e..c09b001 100755
+--- a/3.3.2/app/Http/Controllers/UserController.php
++++ b/www/app/Http/Controllers/UserController.php
 @@ -154,6 +154,7 @@ class UserController extends Controller
                  break;
  
              case 'delete':
-+                return json(trans('user.player.rename.forbidden'), 6);
++			    return json(trans('user.player.rename.forbidden'), 6);
                  $this->validate($request, [
                      'password' => 'required|min:6|max:16'
                  ]);
-diff --git a/3.3.1/resources/lang/zh_CN/index.yml b/custom/resources/lang/zh_CN/index.yml
-index e395192..f4658a2
---- a/3.3.1/resources/lang/zh_CN/index.yml
-+++ b/custom/resources/lang/zh_CN/index.yml
+diff --git a/3.3.2/app/Providers/ValidatorExtendServiceProvider.php b/www/app/Providers/ValidatorExtendServiceProvider.php
+index 42136ce..3e70409 100755
+--- a/3.3.2/app/Providers/ValidatorExtendServiceProvider.php
++++ b/www/app/Providers/ValidatorExtendServiceProvider.php
+@@ -37,7 +37,7 @@ class ValidatorExtendServiceProvider extends ServiceProvider
+         });
+ 
+         Validator::extend('pname_chinese', function($a, $value, $p, $v) {
+-            return preg_match("/^([A-Za-z0-9\x{4e00}-\x{9fa5}_]+)$/u", $value);
++            return preg_match("/^([A-Za-z0-9\x{0800}-\x{4e00}\x{4e00}-\x{9fa5}_]+)$/u", $value);
+         });
+ 
+         Validator::extend('preference', function($a, $value, $p, $v) {
+diff --git a/3.3.2/resources/lang/zh_CN/auth.yml b/www/resources/lang/zh_CN/auth.yml
+index 5373183..269389d 100755
+--- a/3.3.2/resources/lang/zh_CN/auth.yml
++++ b/www/resources/lang/zh_CN/auth.yml
+@@ -14,13 +14,15 @@ check:
+ register:
+   title: 注册
+   button: 注册
+-  message: 欢迎使用 :sitename！
+-  nickname-intro: 昵称可使用汉字，不可包含特殊字符
++  message: 欢迎注册 :sitename！
++  nickname-intro: 请输入您要在游戏中使用的角色名：可使用中日英文以及数字下划线，不可包含特殊字符
+   repeat-pwd: 重复密码
+-  close: 残念。。本皮肤站已经关闭注册咯 QAQ
++  close: 残念。。本站已经关闭注册咯 QAQ
+   success: 注册成功，正在跳转~
+   success-without-player: 注册成功。但您需要手动添加角色因为角色名重复。
+   success-with-chinese-player-name: 注册成功。但您需要手动添加角色因为角色名中包含中文字符。
++  failed-without-player: 注册失败：角色名重复。
++  failed-with-chinese-player-name: 注册失败：角色名不合法。
+   max: 你最多只能注册 :regs 个账户哦
+   registered: 这个邮箱已经注册过啦，换一个吧
+   auto-add-player: 注册成功后自动新建同名角色
+diff --git a/3.3.2/resources/lang/zh_CN/index.yml b/www/resources/lang/zh_CN/index.yml
+index e395192..28a1ca7 100755
+--- a/3.3.2/resources/lang/zh_CN/index.yml
++++ b/www/resources/lang/zh_CN/index.yml
 @@ -1,16 +1,16 @@
  features:
    multi-player:
@@ -58,40 +198,75 @@ index e395192..f4658a2
 +introduction: 本站为 :sitename 服务器的官方网站，为玩家提供账户管理以及皮肤的上传托管服务。使用专用启动器或配合 CustomSkinLoader 等换肤 MOD，您可以为您的游戏角色设置皮肤与披风，并让其他玩家在游戏中看到。
  
  start: 开始使用
-diff --git a/3.3.1/resources/lang/zh_CN/user.yml b/custom/resources/lang/zh_CN/user.yml
-index e7d6e03..d3049e2
---- a/3.3.1/resources/lang/zh_CN/user.yml
-+++ b/custom/resources/lang/zh_CN/user.yml
-@@ -94,6 +94,7 @@ player:
-     success: 角色 :name 已被删除
+diff --git a/3.3.2/resources/lang/zh_CN/user.yml b/www/resources/lang/zh_CN/user.yml
+index 439ab38..993d5c7 100755
+--- a/3.3.2/resources/lang/zh_CN/user.yml
++++ b/www/resources/lang/zh_CN/user.yml
+@@ -56,6 +56,7 @@ closet:
+     lack-score: 积分不够添加收藏啦
  
    rename:
 +    forbidden: 该操作已被禁止
-     repeated: 此角色名已被他人使用，换一个吧~
-     success: 角色 :old 已更名为 :new
+     title: 重命名物品
+     success: 衣柜物品成功重命名至 :name
  
-diff --git a/3.3.1/resources/views/auth/register.tpl b/custom/resources/views/auth/register.tpl
-old mode 100644
-new mode 100755
-index bb46cba..9b8b1d7
---- a/3.3.1/resources/views/auth/register.tpl
-+++ b/custom/resources/views/auth/register.tpl
-@@ -10,7 +10,8 @@
+@@ -84,7 +85,7 @@ player:
+     empty: 未上传
+ 
+   pname-rule: 只能包含数字、字母以及下划线
+-  pname-rule-chinese: 可使用汉字，字母数字以及下划线
++  pname-rule-chinese: 可使用中日英文以及数字下划线
+ 
+   add:
+     repeated: 该角色名已经被其他人注册掉啦
+diff --git a/3.3.2/resources/views/auth/login.tpl b/www/resources/views/auth/login.tpl
+index d549e88..564bebe 100755
+--- a/3.3.2/resources/views/auth/login.tpl
++++ b/www/resources/views/auth/login.tpl
+@@ -26,7 +26,7 @@
+                 <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+             </div>
+ 
+-            <div class="row" id="captcha-form" style="{{ (session('login_fails') > 3) ? '' : 'display: none;' }}">
++			<div class="row" id="captcha-form" >
+                 <div class="col-xs-8">
+                     <div class="form-group has-feedback">
+                         <input id="captcha" type="text" class="form-control" placeholder="{{ trans('auth.captcha') }}">
+diff --git a/3.3.2/resources/views/auth/register.tpl b/www/resources/views/auth/register.tpl
+index ce0773c..639d256 100755
+--- a/3.3.2/resources/views/auth/register.tpl
++++ b/www/resources/views/auth/register.tpl
+@@ -10,7 +10,7 @@
      </div>
  
      <div class="register-box-body">
 -        <p class="login-box-msg">{{ trans('auth.register.message', ['sitename' => option('site_name')]) }}</p>
 +        <p class="login-box-msg"><strong>{{ trans('auth.register.message', ['sitename' => option('site_name')]) }}</strong></p>
-+		<p class="login-box-msg" style="color:#FF0000">注册后请不要忘记创建角色哦~</p>
  
          <form id="register-form">
              <div class="form-group has-feedback">
-diff --git a/3.3.1/resources/views/index.tpl b/custom/resources/views/index.tpl
-old mode 100644
-new mode 100755
-index bb333bd..930f6ab
---- a/3.3.1/resources/views/index.tpl
-+++ b/custom/resources/views/index.tpl
+@@ -27,16 +27,10 @@
+             </div>
+ 
+             <div class="form-group has-feedback" title="{{ trans('auth.register.nickname-intro') }}" data-placement="top" data-toggle="tooltip">
+-                <input id="nickname" type="text" class="form-control" placeholder="{{ trans('auth.nickname') }}">
++                <input id="nickname" type="text" class="form-control" placeholder="{{ '角色名' }}">
+                 <span class="glyphicon glyphicon-pencil form-control-feedback"></span>
+             </div>
+ 
+-            <div class="checkbox icheck" style="margin-top: 0;">
+-                <label for="keep">
+-                    <input id="add-player" type="checkbox"> {{ trans('auth.register.auto-add-player') }}
+-                </label>
+-            </div>
+-
+             <div class="row">
+                 <div class="col-xs-8">
+                     <div class="form-group has-feedback">
+diff --git a/3.3.2/resources/views/index.tpl b/www/resources/views/index.tpl
+index bb333bd..930f6ab 100755
+--- a/3.3.2/resources/views/index.tpl
++++ b/www/resources/views/index.tpl
 @@ -76,7 +76,7 @@
      <div id="intro">
          <div class="container">
